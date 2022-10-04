@@ -1,4 +1,3 @@
-use core::panicking::panic;
 use std::fs;
 
 use super::http::{Method, ParseError, Request, Response, StatusCode};
@@ -21,7 +20,7 @@ impl WebsiteHandler {
                 if path.starts_with(&self.public_path) {
                     fs::read_to_string(path).ok()
                 } else {
-                    println!("Directory traversal attack attempted : {}", _);
+                    println!("Directory traversal attack attempted : {}", path.to_string_lossy());
                     None
                 }
             }
