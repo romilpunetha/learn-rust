@@ -1,0 +1,13 @@
+[package]
+name = "search_engine"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+rand = "0.8.5"
+amxml = "0.5.3"
+stopwords = "0.1.0"
+porter-stemmer = "0.1.2"
+regex = "1.6.0"
