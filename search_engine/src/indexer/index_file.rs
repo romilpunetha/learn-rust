@@ -16,7 +16,12 @@ impl IndexFile {
         }
     }
 
-    pub fn create(&self, counter: u64, word_map: &BTreeMap<String, HashMap<String, IndexerTags>>) {
+    pub fn create(&self, counter: u64, word_map: &BTreeMap<String, HashMap<String, IndexerTags>>, title_map: &BTreeMap<u64, String>) {
+        self._create_title_file(&counter, title_map);
+        self._create_index_file(&counter, word_map);
+    }
+
+    fn _create_index_file(&self, counter: &u64, word_map: &BTreeMap<String, HashMap<String, IndexerTags>>) {
         let mut index = File::options().append(true).create(true).open(format!("{}/public/{}.txt", env!("CARGO_MANIFEST_DIR"), counter)).unwrap();
         for entry in word_map {
             let word = entry.0;
@@ -45,6 +50,13 @@ impl IndexFile {
                 index.write_all(to_append.as_ref()).unwrap();
             }
             index.write_all(b"\r\n").unwrap();
+        }
+    }
+
+    fn _create_title_file(&self, counter: &u64, title_map: &BTreeMap<u64, String>) {
+        let mut index = File::options().append(true).create(true).open(format!("{}/public/title{}.txt", env!("CARGO_MANIFEST_DIR"), counter)).unwrap();
+        for entry in title_map {
+            index.write_all(format!("{}-{}\n", entry.0, entry.1).as_ref()).unwrap();
         }
     }
 }

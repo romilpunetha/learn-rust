@@ -20,7 +20,7 @@ static TERTIARY_LIMIT: u32 = 100;
 
 pub struct Indexer {
     index: BTreeMap<String, HashMap<String, IndexerTags>>,
-    title_map: HashMap<u64, String>,
+    title_map: BTreeMap<u64, String>,
     page_counter: u64,
     secondary_index_count: u64,
     tertiary_index_count: u64,
@@ -38,9 +38,6 @@ pub struct Indexer {
     buffer_title: String,
     buffer_text: String,
     buffer_id: String,
-    doc_id_term_primary: File,
-    doc_id_term_secondary: File,
-    doc_id_term_tertiary: File,
     id_data: String,
     title_data: String,
     index_file: IndexFile,
@@ -51,7 +48,7 @@ impl Indexer {
     pub fn new() -> Self {
         Indexer {
             index: BTreeMap::new(),
-            title_map: HashMap::new(),
+            title_map: BTreeMap::new(),
             page_counter: 0,
             secondary_index_count: 0,
             tertiary_index_count: 0,
@@ -69,9 +66,6 @@ impl Indexer {
             buffer_title: "".to_string(),
             buffer_text: "".to_string(),
             buffer_id: "".to_string(),
-            doc_id_term_primary: File::options().append(true).create(true).open(format!("{}/public/docId-term-primary.txt", env!("CARGO_MANIFEST_DIR"))).unwrap(),
-            doc_id_term_secondary: File::options().append(true).create(true).open(format!("{}/public/docId-term-secondary.txt", env!("CARGO_MANIFEST_DIR"))).unwrap(),
-            doc_id_term_tertiary: File::options().append(true).create(true).open(format!("{}/public/docId-term-tertiary.txt", env!("CARGO_MANIFEST_DIR"))).unwrap(),
             id_data: "".to_string(),
             title_data: "".to_string(),
             index_file: IndexFile::new(),
@@ -141,13 +135,12 @@ impl Indexer {
                     if self.is_id {
                         self.buffer_id = chardata.clone();
                         if self.is_page {
-                            self.buffer_title = format!("{}{}", self.buffer_title, chardata);
                             self.title_map.insert(self.buffer_id.parse::<u64>().unwrap(), self.buffer_title.clone());
                         }
                     } else if self.is_title {
-                        self.buffer_title = format!("{}{}", self.buffer_title, chardata);
+                        self.buffer_title = format!("{}", chardata);
                     } else if self.is_text {
-                        self.buffer_text = format!("{}{}", self.buffer_text, chardata);
+                        self.buffer_text = format!("{}", chardata);
                     }
                 }
                 _ => {}
@@ -170,7 +163,7 @@ impl Indexer {
     }
 
     pub fn create_index(&mut self) {
-        self.index_file.create(self.page_counter, &self.index);
+        self.index_file.create(self.page_counter, &self.index, &self.title_map);
         self.page_counter += 1;
     }
 
