@@ -14,8 +14,8 @@ use crate::indexer::index_file::IndexFile;
 use crate::indexer::IndexerTags;
 use crate::indexer::parser::Parser;
 
-static PAGE_LIMIT: u32 = 250;
-static SECONDARY_LIMIT: u32 = 100;
+static PAGE_LIMIT: u32 = 2500;
+static SECONDARY_LIMIT: u32 = 1000;
 static TERTIARY_LIMIT: u32 = 100;
 
 pub struct Indexer {
@@ -28,7 +28,6 @@ pub struct Indexer {
     tertiary_offset: u64,
     secondary_index_to_store: u64,
     tertiary_index_to_store: u64,
-    curr_id: String,
     is_title: bool,
     is_page: bool,
     is_revision: bool,
@@ -60,7 +59,6 @@ impl Indexer {
             tertiary_offset: 0,
             secondary_index_to_store: 0,
             tertiary_index_to_store: 0,
-            curr_id: "".to_string(),
             is_title: false,
             is_page: false,
             is_revision: false,
@@ -96,10 +94,9 @@ impl Indexer {
                             self.buffer_title = "".to_string();
                         }
                         "id" => {
-                            if self.is_id && !self.is_page {
+                            if !self.is_page {
                                 self.is_id = true;
                                 self.is_page = true;
-                                self.page_counter += 1;
                                 self.buffer_id = String::from("");
                             }
                         }
@@ -141,9 +138,12 @@ impl Indexer {
                     if chardata.trim().len() == 0 {
                         continue;
                     }
-                    if self.is_id && self.is_page {
-                        self.buffer_title = format!("{}{}", self.buffer_title, chardata);
-                        self.title_map.insert(self.buffer_title.parse::<u64>().unwrap(), self.buffer_title.clone());
+                    if self.is_id {
+                        self.buffer_id = chardata.clone();
+                        if self.is_page {
+                            self.buffer_title = format!("{}{}", self.buffer_title, chardata);
+                            self.title_map.insert(self.buffer_id.parse::<u64>().unwrap(), self.buffer_title.clone());
+                        }
                     } else if self.is_title {
                         self.buffer_title = format!("{}{}", self.buffer_title, chardata);
                     } else if self.is_text {
@@ -163,7 +163,6 @@ impl Indexer {
                     Region::Body => indexer_tags.increment_body(),
                     Region::Category => indexer_tags.increment_category(),
                     Region::InfoBox => indexer_tags.increment_info_box(),
-                    _ => {}
                 }
             }
             _ => {}
@@ -177,15 +176,14 @@ impl Indexer {
 
     fn _process(&mut self, str: &str) -> Option<&mut IndexerTags> {
         let key = str.to_string();
-
         if !self.index.contains_key(&key) {
             self.index.insert(key.clone(), HashMap::new());
         }
 
-        if !self.index.get(&key)?.contains_key(&self.curr_id) {
-            self.index.get_mut(&key)?.insert(self.curr_id.to_string(), IndexerTags::new());
+        if !self.index.get(&key)?.contains_key(&self.buffer_id) {
+            self.index.get_mut(&key)?.insert(self.buffer_id.to_string(), IndexerTags::new());
         }
 
-        self.index.get_mut(&key)?.get_mut(&*self.curr_id)
+        self.index.get_mut(&key)?.get_mut(&*self.buffer_id)
     }
 }

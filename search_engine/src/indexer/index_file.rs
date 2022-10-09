@@ -25,10 +25,10 @@ impl IndexFile {
             index.write_all(format!("{}-", word).as_ref()).unwrap();
 
             for loc_entry in word_index {
-                let document_name = loc_entry.0;
+                let document_id = loc_entry.0;
                 let indexer_tags = loc_entry.1;
                 let idf = indexer_tags.get_title() + indexer_tags.get_body() + indexer_tags.get_category() + indexer_tags.get_info_box();
-                let mut to_append: String = format!("{}:{}", document_name, idf);
+                let mut to_append: String = format!("{}:f{}", document_id, idf);
                 if indexer_tags.get_title() != 0 {
                     to_append = format!("{}t{}", to_append, indexer_tags.get_title());
                 }
