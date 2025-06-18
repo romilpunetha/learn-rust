@@ -6,7 +6,7 @@ use crate::cache::Cache;
 pub struct Node {
     pub id: i64,
     pub node_type: String,
-    pub data: Option<String>,
+    pub data: Option<Vec<u8>>,
 }
 
 #[derive(Debug, Clone)]
@@ -15,7 +15,7 @@ pub struct Edge {
     pub source: i64,
     pub target: i64,
     pub edge_type: String,
-    pub data: Option<String>,
+    pub data: Option<Vec<u8>>,
 }
 
 pub struct Database {
@@ -36,7 +36,7 @@ impl Database {
         crate::schema::init_db(&self.conn)
     }
 
-    pub fn create_node(&self, node_type: &str, data: Option<&str>) -> Result<Node> {
+    pub fn create_node(&self, node_type: &str, data: Option<&[u8]>) -> Result<Node> {
         self.conn.execute(
             "INSERT INTO nodes (node_type, data) VALUES (?1, ?2)",
             params![node_type, data],
@@ -45,7 +45,7 @@ impl Database {
         Ok(Node {
             id,
             node_type: node_type.to_string(),
-            data: data.map(|s| s.to_string()),
+            data: data.map(|s| s.to_vec()),
         })
     }
 
@@ -54,7 +54,7 @@ impl Database {
         source: i64,
         target: i64,
         edge_type: &str,
-        data: Option<&str>,
+        data: Option<&[u8]>,
     ) -> Result<Edge> {
         self.conn.execute(
             "INSERT INTO edges (source, target, edge_type, data) VALUES (?1, ?2, ?3, ?4)",
@@ -66,7 +66,7 @@ impl Database {
             source,
             target,
             edge_type: edge_type.to_string(),
-            data: data.map(|s| s.to_string()),
+            data: data.map(|s| s.to_vec()),
         })
     }
 
@@ -89,6 +89,20 @@ impl Database {
         let edges: Vec<Edge> = edges_iter.map(|r| r.unwrap()).collect();
         self.cache.insert(source, edges.clone());
         Ok(edges)
+    }
+
+    pub fn get_all_nodes(&self) -> Result<Vec<Node>> {
+        let mut stmt = self
+            .conn
+            .prepare("SELECT id, node_type, data FROM nodes")?;
+        let iter = stmt.query_map([], |row| {
+            Ok(Node {
+                id: row.get(0)?,
+                node_type: row.get(1)?,
+                data: row.get(2)?,
+            })
+        })?;
+        Ok(iter.map(|r| r.unwrap()).collect())
     }
 }
 

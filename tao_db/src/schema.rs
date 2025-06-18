@@ -6,14 +6,14 @@ pub fn init_db(conn: &Connection) -> Result<()> {
         CREATE TABLE IF NOT EXISTS nodes (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             node_type TEXT NOT NULL,
-            data TEXT
+            data BLOB
         );
         CREATE TABLE IF NOT EXISTS edges (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             source INTEGER NOT NULL,
             target INTEGER NOT NULL,
             edge_type TEXT NOT NULL,
-            data TEXT,
+            data BLOB,
             FOREIGN KEY(source) REFERENCES nodes(id),
             FOREIGN KEY(target) REFERENCES nodes(id)
         );
