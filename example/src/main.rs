@@ -8,3 +8,4 @@ fn main() {
 
     println!("After calling closure: {:?}", list);
 }
+

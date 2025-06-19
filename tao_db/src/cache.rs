@@ -19,5 +19,13 @@ impl<K: std::hash::Hash + Eq, V> Cache<K, V> {
     pub fn insert(&mut self, key: K, value: V) {
         self.inner.put(key, value);
     }
+
+    pub fn remove(&mut self, key: &K) -> Option<V> {
+        self.inner.pop(key)
+    }
+
+    pub fn clear(&mut self) {
+        self.inner.clear();
+    }
 }
 
